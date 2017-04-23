@@ -1,0 +1,19 @@
+{
+	    "http": {
+	        "listen_addr": "@en0",
+	        "listen_port": 80 
+	    },
+	    "log": {
+	        "LogDir": "log",
+	        "LogPrefix": "api_example",
+	        "LogSuffix": ".log",
+	        "LogSize": 50,	
+	        "LogLevel": "DEBUG",
+			"LogType": "stdout"
+	    },
+		"trace": {
+			"addr": "127.0.0.1:9001",
+			"sampling": 0,
+			"root": true
+		}
+}
