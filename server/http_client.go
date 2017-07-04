@@ -30,15 +30,17 @@ func sendHttpRequest(ctx trace.XContext, url_path string, params map[string]inte
 	if err != nil {
 		return
 	}
-	req.Header.Set("X-Session-No", ctx.GetSessionNo())
-	req.Header.Set("X-Trace-Context", fmt.Sprintf("%d:%d", ctx.GetTraceId(), ctx.GetSpanId()))
+	if ctx != nil {
+		req.Header.Set("X-Session-No", ctx.GetSessionNo())
+		req.Header.Set("X-Trace-Context", fmt.Sprintf("%d:%d", ctx.GetTraceId(), ctx.GetSpanId()))
+	}
 	result, err := client.Do(req)
 	if err != nil {
 		return
 	}
 	defer result.Body.Close()
 	new_span_id, err := strconv.Atoi(result.Header.Get("X-Trace-Context"))
-	if err == nil {
+	if err == nil && ctx != nil {
 		ctx.SetSpanId(int32(new_span_id))
 	}
 	res, err = ioutil.ReadAll(result.Body)
@@ -52,15 +54,17 @@ func sendHttpPostRequest(ctx trace.XContext, url_path string, body_type string, 
 		return
 	}
 	req.Header.Set("Content-Type", body_type)
-	req.Header.Set("X-Session-No", ctx.GetSessionNo())
-	req.Header.Set("X-Trace-Context", fmt.Sprintf("%d:%d", ctx.GetTraceId(), ctx.GetSpanId()))
+	if ctx != nil {
+		req.Header.Set("X-Session-No", ctx.GetSessionNo())
+		req.Header.Set("X-Trace-Context", fmt.Sprintf("%d:%d", ctx.GetTraceId(), ctx.GetSpanId()))
+	}
 	result, err := client.Do(req)
 	if err != nil {
 		return
 	}
 	defer result.Body.Close()
 	new_span_id, err := strconv.Atoi(result.Header.Get("X-Trace-Context"))
-	if err == nil {
+	if err == nil && ctx != nil {
 		ctx.SetSpanId(int32(new_span_id))
 	}
 	res, err = ioutil.ReadAll(result.Body)
@@ -73,15 +77,17 @@ func sendHttpMethodRequest(ctx trace.XContext, method string, url_path string, b
 		return
 	}
 	client := newTimeoutHTTPClient(time.Duration(timeOut) * time.Second)
-	http_request.Header.Set("X-Session-No", ctx.GetSessionNo())
-	http_request.Header.Set("X-Trace-Context", fmt.Sprintf("%d:%d", ctx.GetTraceId(), ctx.GetSpanId()))
+	if ctx != nil {
+		http_request.Header.Set("X-Session-No", ctx.GetSessionNo())
+		http_request.Header.Set("X-Trace-Context", fmt.Sprintf("%d:%d", ctx.GetTraceId(), ctx.GetSpanId()))
+	}
 	result, err := client.Do(http_request)
 	if err != nil {
 		return
 	}
 	defer result.Body.Close()
 	new_span_id, err := strconv.Atoi(result.Header.Get("X-Trace-Context"))
-	if err == nil {
+	if err == nil && ctx != nil {
 		ctx.SetSpanId(int32(new_span_id))
 	}
 	res, err = ioutil.ReadAll(result.Body)
@@ -119,8 +125,10 @@ func sendHttPRequestBylimit(ctx trace.XContext, method, urlStr string, reader io
 		return nil, err
 	}
 	req.Header = header
-	req.Header.Set("X-Session-No", ctx.GetSessionNo())
-	req.Header.Set("X-Trace-Context", fmt.Sprintf("%d:%d", ctx.GetTraceId(), ctx.GetSpanId()))
+	if ctx != nil {
+		req.Header.Set("X-Session-No", ctx.GetSessionNo())
+		req.Header.Set("X-Trace-Context", fmt.Sprintf("%d:%d", ctx.GetTraceId(), ctx.GetSpanId()))
+	}
 	client := new(http.Client)
 	result, err := client.Do(req)
 	if err != nil {
@@ -128,7 +136,7 @@ func sendHttPRequestBylimit(ctx trace.XContext, method, urlStr string, reader io
 	}
 	defer result.Body.Close()
 	new_span_id, err := strconv.Atoi(result.Header.Get("X-Trace-Context"))
-	if err == nil {
+	if err == nil && ctx != nil {
 		ctx.SetSpanId(int32(new_span_id))
 	}
 	res, err := ioutil.ReadAll(result.Body)
