@@ -9,7 +9,9 @@ xframe is suitable for api server, middleware and backend server.
 
 Install & Run
 
+```bash
 go get github.com/jollyburger/xframe
+```
 
 ---
 
@@ -19,7 +21,7 @@ Refer to example/http_example
 
 in main.go, you need to initialize the config and start your socket service
 
-```
+```go
 package main
 
 import (
@@ -93,7 +95,7 @@ func main() {
 
 for handler logic
 
-```
+```go
 package logic
 
 import (
