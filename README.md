@@ -5,7 +5,7 @@ xframe is suitable for api server, middleware and backend server.
 
 ---
 
-How to Install
+## How to Install
 
 Install & Run
 
@@ -13,7 +13,7 @@ go get github.com/jollyburger/xframe
 
 ---
 
-How to Use
+## How to Use
 
 Refer to example/http_example
 
@@ -157,4 +157,4 @@ func RouteHTTP(w http.ResponseWriter, r *http.Request) {
 ```
 
 ---
-To be continued
+## To be continued
