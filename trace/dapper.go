@@ -30,16 +30,16 @@ type XContext interface {
 }
 
 type Trace struct {
-	context.Context                        //golib context
-	ParentId        int32                  //ancestor trace id, send to traceaccess
-	TraceId         int32                  //trace id, send to traceaccess
-	SpanId          int32                  //span id: current trace id after rpc
-	TaskId          int32                  //task id
-	SessionNo       string                 //session no
-	FuncName        string                 //function name
-	TraceFlag       bool                   //trace switch
-	Time            string                 //trace data start
-	DataMap         map[string]interface{} //customized data
+	context.Context `json:"-"`             //golib context
+	ParentId        int32                  `json:"parent_id"`  //ancestor trace id, send to traceaccess
+	TraceId         int32                  `json:"trace_id"`   //trace id, send to traceaccess
+	SpanId          int32                  `json:"span_id"`    //span id: current trace id after rpc
+	TaskId          int32                  `json:"task_id"`    //task id
+	SessionNo       string                 `json:"session_no"` //session no
+	FuncName        string                 `json:"func_name"`  //function name
+	TraceFlag       bool                   `json:"-"`          //trace switch
+	Time            string                 `json:"time"`       //trace data start
+	DataMap         map[string]interface{} `json:"data_map"`   //customized data
 }
 
 func InitTrace(session_no string, trace_id int32, span_id int32) *Trace {
