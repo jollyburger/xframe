@@ -77,6 +77,13 @@ func SetDailyRotate(daily bool) {
 	Glogger.SetDailyRotate(daily)
 }
 
+func SetBackup(backup int) {
+	if Glogger == nil {
+		InitLogger(defaultLogDir, defaultLogPrefix, defaultLogSuffix, defaultLogSize, defaultLogLevelString, "")
+	}
+	Glogger.SetBackup(backup)
+}
+
 func EnableLogDepth(flag bool, depth int) {
 	if Glogger == nil {
 		InitLogger(defaultLogDir, defaultLogPrefix, defaultLogSuffix, defaultLogSize, defaultLogLevelString, "")

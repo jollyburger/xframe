@@ -393,3 +393,11 @@ func (l *Logger) SetDailyRotate(daily bool) {
 		l.rotateLogger.SetDailyRotate(daily)
 	}
 }
+
+func (l *Logger) SetBackup(backup int) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	if l.rotate {
+		l.rotateLogger.SetBackup(backup)
+	}
+}

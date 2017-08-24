@@ -26,6 +26,8 @@ type RotateLogger struct {
 	//daily
 	daily         bool
 	daily_openday int
+	//backup
+	backup int
 	//hooks
 	hooks Hooks
 	*Logger
@@ -86,7 +88,7 @@ func NewRotateLogger(dir, prefix, suffix string, size int64) (rl *RotateLogger, 
 	}
 	rl.logf = logf
 	rl.SetLogf(rl.logf)
-	go lorateLog(rl)
+	go rotateLog(rl)
 	return
 }
 
@@ -113,6 +115,10 @@ func (rl *RotateLogger) SetDailyRotate(daily bool) {
 	rl.daily = daily
 }
 
+func (rl *RotateLogger) SetBackup(backup int) {
+	rl.backup = backup
+}
+
 func (rl *RotateLogger) Close() {
 	rl.isClosed <- true
 }
@@ -122,7 +128,8 @@ func (rl *RotateLogger) OpenLogf() (logf *os.File, err error) {
 		return
 	}
 	fname := LogName(rl.dir, rl.prefix, rl.suffix, rl.idx)
-	logf, err = os.OpenFile(fname, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0777)
+	//os.Remove(fname)
+	logf, err = os.OpenFile(fname, os.O_WRONLY|os.O_APPEND|os.O_CREATE|os.O_TRUNC, 0777)
 	if err != nil {
 		return
 	}
@@ -134,7 +141,10 @@ func (rl *RotateLogger) Output(reqId string, lvl int, calldepth int, s string) e
 	return rl.Logger.Output(reqId, lvl, calldepth, s)
 }
 
-func lorateLog(rl *RotateLogger) {
+func _pruneFile(file_name string) {
+}
+
+func rotateLog(rl *RotateLogger) {
 	for {
 		select {
 		case cnt := <-rl.checkRotate:
@@ -144,6 +154,16 @@ func lorateLog(rl *RotateLogger) {
 				logf, err := rl.OpenLogf()
 				if err == nil {
 					rl.SetLogf(logf)
+				}
+			} else if rl.backup != 0 {
+				if fi, err := rl.logf.Stat(); err == nil {
+					if fi.Size() >= rl.size {
+						rl.idx = ((rl.idx + 1) % int64(rl.backup))
+						logf, err := rl.OpenLogf()
+						if err == nil {
+							rl.SetLogf(logf)
+						}
+					}
 				}
 			} else if cnt%100 == 0 {
 				if fi, err := rl.logf.Stat(); err == nil {

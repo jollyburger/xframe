@@ -1,12 +1,14 @@
 package log
 
 import (
+	"fmt"
 	"runtime"
 	"testing"
+	"time"
 )
 
 func TestWrite(t *testing.T) {
-	InitLogger(".", "test", "logtest", 10, "DEBUG", "")
+	InitLogger(".", "test", "testlog", 10, "DEBUG", "")
 	INFO("test")
 }
 
@@ -34,4 +36,11 @@ func TestInitLogger(t *testing.T) {
 	}
 }
 
-//TODO: test case for caller
+func Test_WriteBackup(t *testing.T) {
+	InitLogger(".", "test", "", 2500, "DEBUG", "")
+	SetBackup(5)
+	for {
+		INFO(fmt.Sprintf("%d: test", time.Now().Unix()))
+		time.Sleep(1 * time.Second)
+	}
+}
