@@ -20,7 +20,14 @@ type reader struct {
 }
 
 func newReader(r io.Reader) *reader {
-	rtl := ratelimit.NewBucketWithRate(defaultRate, defaultCapacity)
+	var (
+		rtl = new(ratelimit.Bucket)
+	)
+	if defaultRate <= 0.0 || defaultCapacity <= 0 {
+		rtl = nil
+	} else {
+		rtl = ratelimit.NewBucketWithRate(defaultRate, defaultCapacity)
+	}
 	return &reader{
 		r:         r,
 		buf:       make([]byte, defaultPacketSize),

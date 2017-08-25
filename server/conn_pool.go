@@ -141,8 +141,10 @@ func (cp *ConnPool) Len() int {
 func (cp *ConnPool) CloseAll() {
 	cp.mu.Lock()
 	defer cp.mu.Unlock()
-	for c := range cp.conns {
-		c.Close()
+	if len(cp.conns) != 0 {
+		for c := range cp.conns {
+			c.Close()
+		}
 	}
 	close(cp.conns)
 }
