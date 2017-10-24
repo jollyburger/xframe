@@ -2,21 +2,21 @@ package trace
 
 import (
 	"context"
-	"encoding/json"
-	"net"
-	"sync/atomic"
+	"net/http"
 	"time"
-	"xframe/config"
-	"xframe/log"
+
+	opentracing "github.com/opentracing/opentracing-go"
+	jaeger "github.com/uber/jaeger-client-go"
+	"github.com/uber/jaeger-client-go/config"
 )
 
 var (
-	SAMPLE         uint32 = 0
-	DEFAULT_SAMPLE uint32 = 100
+	GTracer opentracing.Tracer
 )
 
 type XContext interface {
-	SetTaskId(int32) XContext
+	context.Context
+	/*SetTaskId(int32) XContext
 	SetSessionNo(string) XContext
 	SetFuncName(string) XContext
 	SetTraceFlag(bool) XContext
@@ -26,24 +26,23 @@ type XContext interface {
 	GetTraceId() int32
 	GetSpanId() int32
 	GetSessionNo() string
-	SendTraceData()
+	SendTraceData()*/
 }
 
 type Trace struct {
-	context.Context `json:"-"`             //golib context
-	ParentId        int32                  `json:"parent_id"`  //ancestor trace id, send to traceaccess
-	TraceId         int32                  `json:"trace_id"`   //trace id, send to traceaccess
-	SpanId          int32                  `json:"span_id"`    //span id: current trace id after rpc
-	TaskId          int32                  `json:"task_id"`    //task id
-	SessionNo       string                 `json:"session_no"` //session no
-	FuncName        string                 `json:"func_name"`  //function name
-	TraceFlag       bool                   `json:"-"`          //trace switch
-	Time            string                 `json:"time"`       //trace data start
-	DataMap         map[string]interface{} `json:"data_map"`   //customized data
+	/*ParentId  int32                  `json:"parent_id"`  //ancestor trace id, send to traceaccess
+	TraceId   int32                  `json:"trace_id"`   //trace id, send to traceaccess
+	SpanId    int32                  `json:"span_id"`    //span id: current trace id after rpc
+	TaskId    int32                  `json:"task_id"`    //task id
+	SessionNo string                 `json:"session_no"` //session no
+	FuncName  string                 `json:"func_name"`  //function name
+	TraceFlag bool                   `json:"-"`          //trace switch
+	Time      string                 `json:"time"`       //trace data start
+	DataMap   map[string]interface{} `json:"data_map"`   //customized data*/
 }
 
-func InitTrace(session_no string, trace_id int32, span_id int32) *Trace {
-	var sampling_base uint32
+func InitContext() context.Context {
+	/*var sampling_base uint32
 	var trace_flag bool
 	sampling, err := config.GetConfigByKey("trace.sampling")
 	if err != nil {
@@ -61,10 +60,67 @@ func InitTrace(session_no string, trace_id int32, span_id int32) *Trace {
 	if err == nil && root.(bool) {
 		return newTrace(-1, -1, session_no, trace_flag)
 	}
-	return newTrace(trace_id, span_id, session_no, trace_flag)
+	return newTrace(trace_id, span_id, session_no, trace_flag)*/
+	return context.Background()
 }
 
-func newTrace(trace_id, span_id int32, session_no string, trace_flag bool) *Trace {
+/*
+ * service_name: tracing name in UI
+ * trace_type: const, probabilistic, rateLimiting, or remote(deprecated)
+ * params:
+ * - for const, 0/1 means switch on/off
+ * - for probabilistic, from 0 to 1
+ * - for rateLimiting, the number of spans per second
+ */
+
+//TODO: more flexible configuration
+func InitTracer(service_name string, trace_type string, params float64) (err error) {
+	cfg := config.Configuration{
+		Sampler: &config.SamplerConfig{
+			Type:  trace_type,
+			Param: params,
+		},
+		Reporter: &config.ReporterConfig{
+			LogSpans:            false,
+			BufferFlushInterval: 3 * time.Second,
+		},
+	}
+	GTracer, _, err = cfg.New(service_name)
+	return
+}
+
+func ExtractHTTPTracer(header http.Header) (opentracing.SpanContext, error) {
+	return GTracer.Extract(opentracing.TextMap, opentracing.HTTPHeadersCarrier(header))
+}
+
+func ExtractBinaryTracer(trace string) (opentracing.SpanContext, error) {
+	return jaeger.ContextFromString(trace)
+}
+
+func StartSpan(operation_name string, ext_ctx opentracing.SpanContext) opentracing.Span {
+	if ext_ctx != nil {
+		return GTracer.StartSpan(operation_name, opentracing.ChildOf(ext_ctx))
+	}
+	return GTracer.StartSpan(operation_name)
+}
+
+func FinishSpan(sp opentracing.Span) {
+	sp.Finish()
+}
+
+func ContextWithSpan(ctx context.Context, sp opentracing.Span) context.Context {
+	return opentracing.ContextWithSpan(context.Context(ctx), sp)
+}
+
+func SpanFromContext(ctx context.Context) opentracing.Span {
+	return opentracing.SpanFromContext(ctx)
+}
+
+func SetSpanTag(sp opentracing.Span, key string, value interface{}) {
+	sp.SetTag(key, value)
+}
+
+/*func newTrace(trace_id, span_id int32, session_no string, trace_flag bool) *Trace {
 	trace := new(Trace)
 	trace.ParentId = trace_id
 	trace.TraceId = span_id + 1
@@ -120,11 +176,11 @@ func (t *Trace) GetSpanId() int32 {
 
 func (t *Trace) GetSessionNo() string {
 	return t.SessionNo
-}
+}*/
 
 //UDP client
 //TODO: udp client pool, MOVE TO utils
-func sendUDPData(b []byte, addr string) error {
+/*func sendUDPData(b []byte, addr string) error {
 	udp_addr, err := net.ResolveUDPAddr("udp", addr)
 	if err != nil {
 		return err
@@ -159,4 +215,4 @@ func (t *Trace) SendTraceData() {
 		log.ERRORF("send trace data error: %v", err)
 		return
 	}
-}
+}*/

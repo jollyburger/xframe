@@ -142,6 +142,7 @@ func (cp *ConnPool) CloseAll() {
 	cp.mu.Lock()
 	defer cp.mu.Unlock()
 	if len(cp.conns) != 0 {
+		log.DEBUG("closing connection")
 		for c := range cp.conns {
 			c.Close()
 		}

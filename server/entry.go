@@ -6,7 +6,6 @@ import (
 	"net"
 	"net/http"
 	"strconv"
-	"time"
 	"xframe/trace"
 )
 
@@ -97,10 +96,6 @@ func SendHTTPRequestByLimit(ctx trace.XContext, method, urlStr string, reader io
 }
 
 func SendHTTPResponse(ctx trace.XContext, w http.ResponseWriter, b []byte) error {
-	if ctx != nil {
-		ctx.SetTime(time.Now().String())
-		go ctx.SendTraceData()
-	}
 	_, err := w.Write(b)
 	return err
 }
