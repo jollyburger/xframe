@@ -93,6 +93,9 @@ func ExtractHTTPTracer(header http.Header) (opentracing.SpanContext, error) {
 	return GTracer.Extract(opentracing.TextMap, opentracing.HTTPHeadersCarrier(header))
 }
 
+/*
+ * trace: TraceId in Protocol Buffer's Head
+ */
 func ExtractBinaryTracer(trace string) (opentracing.SpanContext, error) {
 	return jaeger.ContextFromString(trace)
 }
@@ -118,6 +121,10 @@ func SpanFromContext(ctx context.Context) opentracing.Span {
 
 func SetSpanTag(sp opentracing.Span, key string, value interface{}) {
 	sp.SetTag(key, value)
+}
+
+func SpanToSpanContext(span opentracing.Span) jaeger.SpanContext {
+	return span.Context().(jaeger.SpanContext)
 }
 
 /*func newTrace(trace_id, span_id int32, session_no string, trace_flag bool) *Trace {
