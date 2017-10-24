@@ -10,6 +10,7 @@ import (
 	"xframe/trace"
 
 	"github.com/juju/ratelimit"
+	"github.com/opentracing-contrib/go-stdlib/nethttp"
 )
 
 func sendHttpRequest(ctx trace.XContext, url_path string, params map[string]interface{}, timeOut uint32) (res []byte, err error) {
@@ -23,10 +24,19 @@ func sendHttpRequest(ctx trace.XContext, url_path string, params map[string]inte
 	}
 	req_url.RawQuery = req_params.Encode()
 	// timeout config, 0 means no-timeout
-	client := newTimeoutHTTPClient(time.Duration(timeOut) * time.Second)
+	//client := newTimeoutHTTPClient(time.Duration(timeOut) * time.Second)
+	client := &http.Client{Transport: &nethttp.Transport{}, Timeout: time.Duration(timeOut) * time.Second}
 	req, err := http.NewRequest("GET", req_url.String(), nil)
 	if err != nil {
 		return
+	}
+	if ctx != nil {
+		var (
+			ht *nethttp.Tracer
+		)
+		req = req.WithContext(ctx)
+		req, ht = nethttp.TraceRequest(trace.GTracer, req, nethttp.OperationName("HTTP GET: "+url_path))
+		defer ht.Finish()
 	}
 	result, err := client.Do(req)
 	if err != nil {
@@ -39,10 +49,19 @@ func sendHttpRequest(ctx trace.XContext, url_path string, params map[string]inte
 }
 
 func sendHttpPostRequest(ctx trace.XContext, url_path string, body_type string, body io.Reader, timeOut uint32) (res []byte, err error) {
-	client := newTimeoutHTTPClient(time.Duration(timeOut) * time.Second)
+	//client := newTimeoutHTTPClient(time.Duration(timeOut) * time.Second)
+	client := &http.Client{Transport: &nethttp.Transport{}, Timeout: time.Duration(timeOut) * time.Second}
 	req, err := http.NewRequest("POST", url_path, body)
 	if err != nil {
 		return
+	}
+	if ctx != nil {
+		var (
+			ht *nethttp.Tracer
+		)
+		req = req.WithContext(ctx)
+		req, ht = nethttp.TraceRequest(trace.GTracer, req, nethttp.OperationName("HTTP POST: "+url_path))
+		defer ht.Finish()
 	}
 	req.Header.Set("Content-Type", body_type)
 	result, err := client.Do(req)
@@ -56,12 +75,21 @@ func sendHttpPostRequest(ctx trace.XContext, url_path string, body_type string, 
 }
 
 func sendHttpMethodRequest(ctx trace.XContext, method string, url_path string, body io.Reader, timeOut uint32) (res []byte, err error) {
-	http_request, err := http.NewRequest(method, url_path, body)
+	req, err := http.NewRequest(method, url_path, body)
 	if err != nil {
 		return
 	}
-	client := newTimeoutHTTPClient(time.Duration(timeOut) * time.Second)
-	result, err := client.Do(http_request)
+	if ctx != nil {
+		var (
+			ht *nethttp.Tracer
+		)
+		req = req.WithContext(ctx)
+		req, ht = nethttp.TraceRequest(trace.GTracer, req, nethttp.OperationName("HTTP "+method+": "+url_path))
+		defer ht.Finish()
+	}
+	//client := newTimeoutHTTPClient(time.Duration(timeOut) * time.Second)
+	client := &http.Client{Transport: &nethttp.Transport{}, Timeout: time.Duration(timeOut) * time.Second}
+	result, err := client.Do(req)
 	if err != nil {
 		return
 	}
@@ -101,8 +129,17 @@ func sendHttPRequestBylimit(ctx trace.XContext, method, urlStr string, reader io
 	if err != nil {
 		return nil, err
 	}
+	if ctx != nil {
+		var (
+			ht *nethttp.Tracer
+		)
+		req = req.WithContext(ctx)
+		req, ht = nethttp.TraceRequest(trace.GTracer, req, nethttp.OperationName("HTTP "+method+": "+urlStr))
+		defer ht.Finish()
+	}
 	req.Header = header
-	client := new(http.Client)
+	//client := new(http.Client)
+	client := &http.Client{Transport: &nethttp.Transport{}}
 	result, err := client.Do(req)
 	if err != nil {
 		return nil, err

@@ -119,23 +119,8 @@ func init() {
 func RouteHTTP(w http.ResponseWriter, r *http.Request) {
 	log.DEBUG(r)
 	r.ParseForm()
-	//get session_no in header
-	session_no := r.Header.Get("X-Session-No")
-	if session_no == "" {
-		session_no = utils.NewUUIDV4().String()
-	}
-	//get trace_id and span_id in header
-	var trace_id, span_id int
-	ids := r.Header.Get("X-Trace-Context")
-	if ids != "" && len(strings.Split(ids, ":")) == 2 {
-		trace_id, _ = strconv.Atoi(strings.Split(ids, ":")[0])
-		span_id, _ = strconv.Atoi(strings.Split(ids, ":")[1])
-	} else {
-		trace_id, span_id = -1, -1
-	}
 	//add customized data in ctx
-	ctx := trace.InitTrace(session_no, int32(trace_id), int32(span_id))
-	go ctx.SendTraceData()
+	ctx := trace.InitContext()
 	//process input value
 	action := r.FormValue("Action")
 	if action == "" {
@@ -157,6 +142,55 @@ func RouteHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 ```
+
+---
+## Tracing
+
+### Build Jaeger 
+
+refer to [jager-deployment](http://jaeger.readthedocs.io/en/latest/deployment/#configuration), building jaeger-agent, jaeger-collector, jaeger-query
+
+refer to [jaeger-ui](https://github.com/uber/jaeger-ui), building jaeger-ui
+
+### Add tracer 
+
+#### Init Tracer
+main.go
+
+```
+    import "xframe/trace"
+    ... 
+    
+    trace.InitTracer("echo-server", "const", 1)
+```
+
+#### End to End
+logic/init.go 
+
+```
+    import "xframe/trace"
+    ...
+    
+    extracted_context, _ := trace.ExtractHTTPTracer(r.Header)
+    sp := trace.StartSpan("tt", extracted_context)
+    trace.FinishSpan(sp)
+```
+
+#### By Context
+logic/echo.go
+
+```
+    import "xframe/trace"
+    ...
+    
+    if span := trace.SpanFromContext(ctx); span != nil {
+        span := trace.StartSpan("echo", span.Context())
+        trace.SetSpanTag(span, "echo.content", "hello world")
+        defer trace.FinishSpan(span)
+        ctx = trace.ContextWithSpan(ctx, span)
+    }   
+```
+
 
 ---
 ## To be continued
