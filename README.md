@@ -195,5 +195,7 @@ logic/echo.go
     }   
 ```
 
+![trace_image](https://github.com/jollyburger/xframe/raw/master/example/images/tracing.png)
+
 ---
 ## To be continued
