@@ -43,26 +43,7 @@ var (
 	confService = flag.String("s", "", "config service address,http server address")
 )
 
-func main() {
-	//CMD Parser
-	cmd.ParseCommand()
-	cmd.DumpCommand()
-	//Config initialization
-	option, err := cmd.GetCommand("c")
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	if err = config.LoadConfigFromFile(option); err != nil {
-		fmt.Println("Load Config File fail,", err)
-		return
-	}
-	config.DumpConfigContent()
-	//Init to start pprof
-	go metric.InitPprof("192.168.191.41:6060")
-	//Init trace tool
-	go trace.InitTraceTool()
-	//Logger Init
+func initLog() {
 	dir, _ := config.GetConfigByKey("log.LogDir")
 	prefix, _ := config.GetConfigByKey("log.LogPrefix")
 	suffix, _ := config.GetConfigByKey("log.LogSuffix")
@@ -70,7 +51,29 @@ func main() {
 	log_level, _ := config.GetConfigByKey("log.LogLevel")
 	log_type, _ := config.GetConfigByKey("log.LogType")
 	log.InitLogger(dir.(string), prefix.(string), suffix.(string), int64(log_size.(float64)), log_level.(string), log_type.(string))
-	// Timer start
+}
+
+func main() {
+	//CMD Parser
+	cmd.ParseCommand()
+	cmd.DumpCommand()
+	//Init config
+	option, err := cmd.GetCommand("c")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	if err = config.LoadConfigFromFile(option); err != nil {
+		fmt.Println("Load Config File Failed,", err)
+		return
+	}
+	//Init pprof
+	go metric.InitPprof("127.0.0.1:6060")
+	//Init trace tool
+	go trace.InitTraceTool()
+	//Init Log
+	initLog()
+	//Timer start
 	timer_handler.TimerTaskServe()
 	// Service start
 	ip, err := config.GetConfigByKey("http.listen_addr")
@@ -90,7 +93,6 @@ func main() {
 		return
 	}
 }
-
 ```
 
 for handler logic
@@ -154,6 +156,8 @@ refer to [jaeger-ui](https://github.com/uber/jaeger-ui), building jaeger-ui
 
 ### Add tracer 
 
+HTTP example
+
 #### Init Tracer
 main.go
 
@@ -190,7 +194,6 @@ logic/echo.go
         ctx = trace.ContextWithSpan(ctx, span)
     }   
 ```
-
 
 ---
 ## To be continued
