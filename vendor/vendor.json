@@ -53,12 +53,6 @@
 			"revisionTime": "2017-05-28T22:49:40Z"
 		},
 		{
-			"checksumSHA1": "c3phx+BWGWXSSlbAZ5K4tGn0WS4=",
-			"path": "github.com/opentracing-contrib/go-stdlib/nethttp",
-			"revision": "48e4d763b2fbcd10e666e6a1742acdf8cc2286ef",
-			"revisionTime": "2017-05-28T22:49:40Z"
-		},
-		{
 			"checksumSHA1": "hpXnjCM/a0edhWUb2+and0mnPyY=",
 			"path": "github.com/opentracing/opentracing-go",
 			"revision": "1361b9cd60be79c4c3a7fa9841b3c132e40066a7",
