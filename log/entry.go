@@ -11,7 +11,7 @@ const (
 	defaultLogSuffix      = ".log"
 	defaultLogSize        = 50 // MB
 	defaultLogLevelString = "DEBUG"
-	defaultLogType        = "file"
+	defaultLogType        = "stdout"
 )
 
 var (
