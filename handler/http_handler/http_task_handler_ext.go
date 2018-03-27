@@ -20,7 +20,7 @@ var (
 
 func httpWrapper(f func(*http.Request) (interface{}, int)) func(http.ResponseWriter, *http.Request) {
 	fn := func(rw http.ResponseWriter, r *http.Request) {
-		data, err := fn(r)
+		data, err := f(r)
 		if err != SUCCESS {
 			DoBaseResponse(rw, err)
 		} else {

@@ -76,7 +76,7 @@ func DumpConfigContent() {
 
 //v0.3: read config json file with customized struct
 func LoadConfigFromFileV2(config interface{}, filepath string) (err error) {
-	confBuf, err := ioutils.ReadFile(filepath)
+	confBuf, err := ioutil.ReadFile(filepath)
 	if err != nil {
 		return
 	}
