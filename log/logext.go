@@ -4,10 +4,15 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path"
 	"runtime"
+	"strings"
 	"sync"
 	"time"
+)
+
+var (
+	_xframeLogPrefixes       = addPrefix(XFRAME_LOG_PREFIX, ".", "/")
+	_xframeLogVendorContains = addPrefix("/vendor/", _xframeLogPrefixes...)
 )
 
 // A Logger represents an active logging object that generates lines of
@@ -25,12 +30,19 @@ type Logger struct {
 	levelStats [6]int64
 	//caller
 	enableCallFuncDepth bool
-	callFuncDepth       int
 	//hooks
 	hooks Hooks
 	//for rotate
 	rotate       bool
 	rotateLogger *RotateLogger
+}
+
+func addPrefix(prefix string, ss ...string) []string {
+	withPrefix := make([]string, len(ss))
+	for i, s := range ss {
+		withPrefix[i] = prefix + s
+	}
+	return withPrefix
 }
 
 // New creates a new Logger.   The out variable sets the
@@ -70,17 +82,36 @@ func (l *Logger) SetHooks(hooks Hooks) {
 	l.hooks = hooks
 }
 
-func (l *Logger) enableLogDepth(flag bool, depth int) {
+func (l *Logger) enableLogDepth(flag bool) {
 	l.enableCallFuncDepth = flag
-	l.callFuncDepth = depth
 	if l.rotate {
-		l.rotateLogger.Logger.enableLogDepth(flag, depth)
+		l.rotateLogger.Logger.enableLogDepth(flag)
 	}
+}
+
+func checkXframeLogPrefix(function string) bool {
+	for _, prefix := range _xframeLogPrefixes {
+		if strings.HasPrefix(function, prefix) {
+			return true
+		}
+	}
+	for _, contains := range _xframeLogVendorContains {
+		if strings.Contains(function, contains) {
+			return true
+		}
+	}
+	return false
+}
+
+func trimFile(file string) string {
+	fields := strings.Split(file, "/")
+	return fields[len(fields)-1]
 }
 
 func (l *Logger) formatHeader(t time.Time, lvl int, reqId string, calldepth int) string {
 	var (
 		date, clock, reqid, level, source, t_ms string
+		pcs                                     = make([]uintptr, 64)
 	)
 	prefix := l.prefix
 	if l.flag&(Ldate|Ltime|Lmicroseconds) != 0 {
@@ -103,11 +134,23 @@ func (l *Logger) formatHeader(t time.Time, lvl int, reqId string, calldepth int)
 	if l.flag&Llevel != 0 {
 		level = levels[lvl]
 	}
+	//use callers and callersframes get file and lineno
 	if l.enableCallFuncDepth {
-		pc, file, lineno, ok := runtime.Caller(l.callFuncDepth)
-		if ok {
-			_, filename := path.Split(file)
-			source = fmt.Sprintf("%s:%s:%d ", runtime.FuncForPC(pc).Name(), filename, lineno)
+		skipXframeLog := true
+		//callers to get frames
+		num := runtime.Callers(calldepth, pcs)
+		frames := runtime.CallersFrames(pcs[:num])
+		//iterate frames
+		for frame, more := frames.Next(); more; frame, more = frames.Next() {
+			//skip xframe/log的stack
+			if skipXframeLog && checkXframeLogPrefix(frame.Function) {
+				continue
+			} else {
+				skipXframeLog = false
+			}
+			//format function + filename + line
+			source = fmt.Sprintf("[%s:%s:%d]", frame.Function, trimFile(frame.File), frame.Line)
+			break
 		}
 	}
 	header := prefix + date + clock + reqid + level + source

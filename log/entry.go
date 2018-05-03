@@ -74,11 +74,11 @@ func SetBackup(backup int) {
 	Glogger.SetBackup(backup)
 }
 
-func EnableLogDepth(flag bool, depth int) {
+func EnableLogDepth(flag bool) {
 	if Glogger == nil {
 		InitLogger(defaultLogDir, defaultLogPrefix, defaultLogSuffix, defaultLogSize, defaultLogLevelString, "")
 	}
-	Glogger.enableLogDepth(flag, depth)
+	Glogger.enableLogDepth(flag)
 }
 
 func SetHook(hook Hook) error {

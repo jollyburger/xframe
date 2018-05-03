@@ -52,3 +52,8 @@ var level_flags = []string{
 	"panic",
 	"fatal",
 }
+
+const (
+	STACK_SIZE        = 64
+	XFRAME_LOG_PREFIX = "xframe/log"
+)
