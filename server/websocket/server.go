@@ -81,7 +81,7 @@ func (s Server) serveWebSocket(w http.ResponseWriter, req *http.Request) {
 	defer rwc.Close()
 	conn, err := newServerConn(rwc, buf, req, &s.Config, s.Handshake)
 	if err != nil {
-		return
+		panic(err)
 	}
 	if conn == nil {
 		panic("unexpected nil conn")

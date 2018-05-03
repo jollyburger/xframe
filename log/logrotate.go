@@ -34,19 +34,22 @@ type RotateLogger struct {
 }
 
 func NewRotateLogger(dir, prefix, suffix string, size int64) (rl *RotateLogger, err error) {
+	var (
+		filelists  []string
+		idx, mtime int64 = 0, 0
+		openday    int   = time.Now().Day()
+		logf       *os.File
+	)
 	if dir == "" {
 		dir = "."
 	}
 	if dir[len(dir)-1:] == "/" {
 		dir = dir[:len(dir)-1]
 	}
-	var filelists []string
 	if filelists, err = filepath.Glob(TodayLogPrefix(dir, prefix) + "*"); err != nil {
 		return
 	}
 	logfile := ""
-	var idx, mtime int64 = 0, 0
-	var openday int = time.Now().Day()
 	//check the modify time, use the latest one
 	for _, fname := range filelists {
 		if f, err := os.Open(fname); err == nil {
@@ -82,12 +85,10 @@ func NewRotateLogger(dir, prefix, suffix string, size int64) (rl *RotateLogger, 
 		daily_openday: openday,
 		hooks:         make(Hooks),
 	}
-	var logf *os.File
 	if logf, err = rl.OpenLogf(); err != nil {
 		return
 	}
-	rl.logf = logf
-	rl.SetLogf(rl.logf)
+	rl.SetLogf(logf)
 	go rotateLog(rl)
 	return
 }
@@ -194,7 +195,7 @@ func rotateLog(rl *RotateLogger) {
 	}
 }
 
-//====================================================================================================
+//================================================
 
 func LogName(dir, prefix, suffix string, idx int64) string {
 	t := time.Now()
@@ -202,13 +203,11 @@ func LogName(dir, prefix, suffix string, idx int64) string {
 }
 
 func TodayLogPrefix(dir, prefix string) string {
-
 	t := time.Now()
 	return fmt.Sprintf("%s/%s%d%02d%02d", dir, prefix, t.Year(), t.Month(), t.Day())
 }
 
 func ParseIdx(filename, dir, prefix, suffix string) (idx int64, err error) {
-
 	if dir != "" {
 		pos := -1
 		if pos = strings.Index(filename, dir); pos != -1 {

@@ -10,63 +10,20 @@ import (
 	"time"
 )
 
-const (
-	Ldate         = 1 << iota                                 // the date: 2009/0123
-	Ltime                                                     // the time: 01:23:23
-	Lmicroseconds                                             // microsecond resolution: 01:23:23.123123.  assumes Ltime.
-	Llongfile                                                 // full file name and line number: /a/b/c/d.go:23
-	Lshortfile                                                // final file name element and line number: d.go:23. overrides Llongfile
-	Lmodule                                                   // module name
-	Llevel                                                    // level: 0(Debug), 1(Info), 2(Warn), 3(Error), 4(Panic), 5(Fatal)
-	LstdFlags     = Ldate | Ltime | Lmicroseconds             // initial values for the standard logger
-	Ldefault      = Lmodule | Llevel | Lshortfile | LstdFlags // [prefix][time][level][module][shortfile|longfile]
-)
-
-const (
-	Lnop = iota
-	Ldebug
-	Linfo
-	Lwarn
-	Lerror
-	Lpanic
-	Lfatal
-)
-
-const BUFFER_SIZE = 1000
-
-var levels = []string{
-	"",
-	"[DEBUG]",
-	"[INFO]",
-	"[WARN]",
-	"[ERROR]",
-	"[PANIC]",
-	"[FATAL]",
-}
-
-var level_flags = []string{
-	"",
-	"debug",
-	"info",
-	"warn",
-	"error",
-	"panic",
-	"fatal",
-}
-
 // A Logger represents an active logging object that generates lines of
 // output to an io.WriterCloser.  Each logging operation makes a single call to
 // the Writer's Write method.  A Logger can be used simultaneously from
 // multiple goroutines; it guarantees to serialize access to the Writer.
 type Logger struct {
-	mu                  sync.Mutex // ensures atomic writes; protects the following fields
-	prefix              string     // prefix to write at beginning of each line
-	flag                int        // properties
-	Level               int
-	out                 io.WriteCloser // destination for output
-	buf                 chan []byte    // for accumulating text to write
-	isClosed            chan bool      // for accumulating text channel
-	levelStats          [6]int64
+	mu         sync.Mutex // ensures atomic writes; protects the following fields
+	prefix     string     // prefix to write at beginning of each line
+	flag       int        // properties
+	Level      int
+	out        io.WriteCloser // destination for output
+	buf        chan []byte    // for accumulating text to write
+	isClosed   chan bool      // for accumulating text channel
+	levelStats [6]int64
+	//caller
 	enableCallFuncDepth bool
 	callFuncDepth       int
 	//hooks
@@ -81,7 +38,14 @@ type Logger struct {
 // The prefix appears at the beginning of each generated log line.
 // The flag argument defines the logging properties.
 func New(out io.WriteCloser, prefix string, flag int) *Logger {
-	logger := &Logger{out: out, prefix: prefix, buf: make(chan []byte, BUFFER_SIZE), isClosed: make(chan bool), Level: 1, flag: flag}
+	logger := &Logger{
+		out:      out,
+		prefix:   prefix,
+		buf:      make(chan []byte, BUFFER_SIZE),
+		isClosed: make(chan bool),
+		Level:    Ldebug,
+		flag:     flag,
+	}
 	go RealWrite(logger)
 	return logger
 }
@@ -92,7 +56,14 @@ func NewRotate(dir, prefix, suffix string, size int64) (*Logger, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &Logger{out: rl.logf, prefix: prefix, Level: 1, flag: Ldefault, rotate: true, rotateLogger: rl}, nil
+	return &Logger{
+		out:          rl.logf,
+		prefix:       prefix,
+		Level:        Ldebug,
+		flag:         Ldefault,
+		rotate:       true,
+		rotateLogger: rl,
+	}, nil
 }
 
 func (l *Logger) SetHooks(hooks Hooks) {
@@ -107,15 +78,11 @@ func (l *Logger) enableLogDepth(flag bool, depth int) {
 	}
 }
 
-func (l *Logger) formatHeader2(t time.Time, lvl int, reqId string) string {
-	prefix := l.prefix
+func (l *Logger) formatHeader(t time.Time, lvl int, reqId string, calldepth int) string {
 	var (
-		date   string
-		clock  string
-		reqid  string
-		level  string
-		source string
+		date, clock, reqid, level, source, t_ms string
 	)
+	prefix := l.prefix
 	if l.flag&(Ldate|Ltime|Lmicroseconds) != 0 {
 		if l.flag&Ldate != 0 {
 			year, month, day := t.Date()
@@ -124,7 +91,6 @@ func (l *Logger) formatHeader2(t time.Time, lvl int, reqId string) string {
 		if l.flag&(Ltime|Lmicroseconds) != 0 {
 			hour, min, sec := t.Clock()
 			t_clock := fmt.Sprintf("%02d:%02d:%02d", hour, min, sec)
-			var t_ms string
 			if l.flag&Lmicroseconds != 0 {
 				t_ms = fmt.Sprintf(".%06d", t.Nanosecond()/1e3)
 			}
@@ -173,7 +139,7 @@ func (l *Logger) Output(reqId string, lvl int, calldepth int, s string) error {
 	}
 	now := time.Now() // get this early.
 	l.levelStats[lvl]++
-	hd := l.formatHeader2(now, lvl, reqId)
+	hd := l.formatHeader(now, lvl, reqId, calldepth)
 	content := hd + s
 	if len(s) > 0 && s[len(s)-1] != '\n' {
 		content = content + "\n"

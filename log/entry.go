@@ -5,15 +5,6 @@ import (
 	"os"
 )
 
-const (
-	defaultLogDir         = "log"
-	defaultLogPrefix      = "xframe_"
-	defaultLogSuffix      = ".log"
-	defaultLogSize        = 50 // MB
-	defaultLogLevelString = "DEBUG"
-	defaultLogType        = "stdout"
-)
-
 var (
 	Glogger *Logger
 )
@@ -25,8 +16,13 @@ func InitLogger(dir, prefix, suffix string, size int64, level string, logtype st
 	if logtype == "" {
 		logtype = defaultLogType
 	}
-	var logger *Logger
-	var err error
+	if level == "" {
+		level = defaultLogLevelString
+	}
+	var (
+		logger *Logger
+		err    error
+	)
 	switch logtype {
 	case "file":
 		if dir == "" {
@@ -41,18 +37,12 @@ func InitLogger(dir, prefix, suffix string, size int64, level string, logtype st
 		if size <= 0 {
 			size = defaultLogSize
 		}
-		if level == "" {
-			level = defaultLogLevelString
-		}
 		logger, err = NewRotate(dir, prefix, suffix, size)
 		if err != nil {
 			fmt.Println("Init Logger fail:", err)
 			os.Exit(-1)
 		}
 	case "stdout":
-		if level == "" {
-			level = defaultLogLevelString
-		}
 		logger = New(os.Stdout, "", Ldefault)
 	}
 	Glogger = logger
