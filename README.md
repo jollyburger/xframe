@@ -5,6 +5,22 @@ xframe is suitable for api server, middleware and backend server.
 
 ---
 
+## Table of Content 
+
+   * [xframe](#xframe)
+      * [How to Install](#how-to-install)
+      * [Functions](#functions)
+      * [How to Use](#how-to-use)
+         * [start http server](#start-http-server)
+         * [register http handler](#register-http-handler)
+      * [Tracing](#tracing)
+         * [Build Jaeger](#build-jaeger)
+         * [Add tracer](#add-tracer)
+            * [Init Tracer](#init-tracer)
+            * [End to End](#end-to-end)
+            * [By Context](#by-context)
+      * [To be continued](#to-be-continued)
+
 ## How to Install
 
 Install & Run
@@ -12,11 +28,22 @@ Install & Run
 ```bash
 go get github.com/jollyburger/xframe
 ```
-
 ---
+
+## Functions
+
+- cmd (parse command line)
+- config (parse file type .ini or .json)
+- log 
+- metric (pprof method and prometheus basic handler)
+- trace (opentracing client lib with xframe context)
+- utils (tool module, like httputils, uuid...)
+- handler (support for http/tcp/websocket/timer handler)
+- server (http/tcp server)
 
 ## How to Use
 
+### start http server
 Refer to example/http_example
 
 in main.go, you need to initialize the config and start your socket service
@@ -94,6 +121,8 @@ func main() {
 	}
 }
 ```
+
+### register http handler
 
 for handler logic
 
