@@ -69,13 +69,13 @@ func RunHTTP(listen_addr string, listen_port int) (err error) {
 }
 
 //customized http multiplexer
-func RunHTTPMux(listen_addr string, listen_port int, mux http.Handler) (err error) {
+func RunHTTPMux(listen_addr string, listen_port int, mux http.Handler, read_timeout int, write_timeout int) (err error) {
 	listen_ip, err := parseListenAddr(listen_addr)
 	if err != nil {
 		return
 	}
 	address := net.JoinHostPort(listen_ip, strconv.Itoa(listen_port))
-	err = listenAndServeHTTPMux(address, mux)
+	err = listenAndServeHTTPMux(address, mux, read_timeout, write_timeout)
 	return
 }
 
