@@ -80,6 +80,10 @@ func LoadConfigFromFileV2(config interface{}, filepath string) (err error) {
 	if err != nil {
 		return
 	}
+	//print json configuration file
+	var pjson bytes.Buffer
+	json.Indent(&pjson, confBuf, "", "\t")
+	fmt.Println(string(pjson.Bytes()))
 	err = json.Unmarshal(confBuf, config)
 	return
 }
