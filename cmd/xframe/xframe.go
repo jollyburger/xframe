@@ -9,7 +9,8 @@ import (
 	"path/filepath"
 	"strings"
 	"text/template"
-	"xframe/cmd/templates"
+
+	"github.com/jollyburger/xframe/cmd/templates"
 )
 
 type handleFunc func(args []string) error

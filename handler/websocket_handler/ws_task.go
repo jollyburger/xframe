@@ -5,8 +5,9 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
-	"xframe/handler/handler_common"
-	"xframe/utils"
+
+	"github.com/jollyburger/xframe/handler/handler_common"
+	"github.com/jollyburger/xframe/utils"
 )
 
 var (

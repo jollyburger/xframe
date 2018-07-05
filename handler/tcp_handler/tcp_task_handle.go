@@ -5,7 +5,8 @@ import (
 	"fmt"
 	"sync"
 	"time"
-	"xframe/trace"
+
+	"github.com/jollyburger/xframe/trace"
 )
 
 type TCPTaskHandler interface {

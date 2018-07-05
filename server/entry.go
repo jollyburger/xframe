@@ -6,7 +6,8 @@ import (
 	"net"
 	"net/http"
 	"strconv"
-	"xframe/trace"
+
+	"github.com/jollyburger/xframe/trace"
 )
 
 // tcp

@@ -6,7 +6,8 @@ import (
 	"net/http"
 	"sync"
 	"time"
-	"xframe/trace"
+
+	"github.com/jollyburger/xframe/trace"
 )
 
 type XHttpTaskHandler interface {

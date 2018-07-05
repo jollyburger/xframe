@@ -5,7 +5,8 @@ import (
 	"net"
 	"sync"
 	"time"
-	"xframe/log"
+
+	"github.com/jollyburger/xframe/log"
 )
 
 var (

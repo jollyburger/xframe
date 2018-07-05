@@ -4,7 +4,8 @@ import (
 	"strconv"
 	"sync"
 	"time"
-	"xframe/log"
+
+	"github.com/jollyburger/xframe/log"
 )
 
 const (

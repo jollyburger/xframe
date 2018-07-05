@@ -3,8 +3,9 @@ package utils
 import (
 	"net/http"
 	"runtime"
-	"xframe/log"
-	"xframe/trace"
+
+	"github.com/jollyburger/xframe/log"
+	"github.com/jollyburger/xframe/trace"
 )
 
 var (

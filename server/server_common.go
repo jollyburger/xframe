@@ -7,7 +7,8 @@ import (
 	"net/http"
 	"regexp"
 	"strings"
-	"xframe/server/websocket"
+
+	"github.com/jollyburger/xframe/server/websocket"
 )
 
 //ratelimit

@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"net/url"
 	"time"
-	"xframe/trace"
 
+	"github.com/jollyburger/xframe/trace"
 	"github.com/juju/ratelimit"
 	"github.com/opentracing-contrib/go-stdlib/nethttp"
 )

@@ -3,7 +3,8 @@ package server
 import (
 	"net/http"
 	"time"
-	"xframe/server/websocket"
+
+	"github.com/jollyburger/xframe/server/websocket"
 )
 
 func listenAndServeHTTP(addr string) error {
