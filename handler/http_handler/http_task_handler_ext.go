@@ -34,6 +34,6 @@ func httpWrapper(f func(*http.Request) (interface{}, int)) func(http.ResponseWri
 	return fn
 }
 
-func RegisterHTTPMuxHandler(path string, f func(*http.Request) (interface{}, int)) {
-	Rt.HandleFunc(path, httpWrapper(f))
+func RegisterHTTPMuxHandler(path string, f func(*http.Request) (interface{}, int)) *mux.Route {
+	return Rt.HandleFunc(path, httpWrapper(f))
 }
