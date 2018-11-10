@@ -16,11 +16,17 @@ var (
 	Rt             = mux.NewRouter()
 	DoBaseResponse = func(http.ResponseWriter, int) {}
 	DoDataResponse = func(http.ResponseWriter, int, interface{}) {}
+	DoReporter     = func(int, string, string) {}
 )
 
 func httpWrapper(f func(*http.Request) (interface{}, int)) func(http.ResponseWriter, *http.Request) {
 	fn := func(rw http.ResponseWriter, r *http.Request) {
 		data, err := f(r)
+
+		var (
+			status = http.StatusOK
+		)
+
 		if err != SUCCESS {
 			DoBaseResponse(rw, err)
 		} else {
@@ -30,6 +36,11 @@ func httpWrapper(f func(*http.Request) (interface{}, int)) func(http.ResponseWri
 				DoBaseResponse(rw, SUCCESS)
 			}
 		}
+
+		status = err
+		DoReporter(status, r.URL.Path, r.Method)
+
+		return
 	}
 	return fn
 }
